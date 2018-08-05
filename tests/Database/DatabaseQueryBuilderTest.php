@@ -2023,6 +2023,15 @@ class DatabaseQueryBuilderTest extends TestCase
         $this->assertEquals('select * from `users` where `items`->\'$."available"\' = true and `items`->\'$."active"\' = false and `items`->\'$."number_available"\' = ?', $builder->toSql());
     }
 
+    public function testMySqlWrappingJsonWithoutQuote()
+    {
+        $builder = $this->getMySqlBuilder();
+        $builder->select('*')->from('users')->where('items->>sku', '=', 'foo-bar');
+        $this->assertEquals('select * from `users` where `items`->>\'$."sku"\' = ?', $builder->toSql());
+        $this->assertCount(1, $builder->getRawBindings()['where']);
+        $this->assertEquals('foo-bar', $builder->getRawBindings()['where'][0]);
+    }
+
     public function testMySqlWrappingJson()
     {
         $builder = $this->getMySqlBuilder();
@@ -2087,15 +2096,15 @@ class DatabaseQueryBuilderTest extends TestCase
 
         $builder = $this->getSqlServerBuilder();
         $builder->select('*')->from('users')->skip(10);
-        $this->assertEquals('select * from (select *, row_number() over (order by (select 0)) as row_num from [users]) as temp_table where row_num >= 11', $builder->toSql());
+        $this->assertEquals('select * from (select *, row_number() over (order by (select 0)) as row_num from [users]) as temp_table where row_num >= 11 order by row_num', $builder->toSql());
 
         $builder = $this->getSqlServerBuilder();
         $builder->select('*')->from('users')->skip(10)->take(10);
-        $this->assertEquals('select * from (select *, row_number() over (order by (select 0)) as row_num from [users]) as temp_table where row_num between 11 and 20', $builder->toSql());
+        $this->assertEquals('select * from (select *, row_number() over (order by (select 0)) as row_num from [users]) as temp_table where row_num between 11 and 20 order by row_num', $builder->toSql());
 
         $builder = $this->getSqlServerBuilder();
         $builder->select('*')->from('users')->skip(10)->take(10)->orderBy('email', 'desc');
-        $this->assertEquals('select * from (select *, row_number() over (order by [email] desc) as row_num from [users]) as temp_table where row_num between 11 and 20', $builder->toSql());
+        $this->assertEquals('select * from (select *, row_number() over (order by [email] desc) as row_num from [users]) as temp_table where row_num between 11 and 20 order by row_num', $builder->toSql());
     }
 
     public function testMySqlSoundsLikeOperator()

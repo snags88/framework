@@ -2057,7 +2057,7 @@ class Builder
     protected function withoutSelectAliases(array $columns)
     {
         return array_map(function ($column) {
-            return is_string($column) && ($aliasPosition = strpos(strtolower($column), ' as ')) !== false
+            return is_string($column) && ($aliasPosition = stripos($column, ' as ')) !== false
                     ? substr($column, 0, $aliasPosition) : $column;
         }, $columns);
     }
@@ -2084,7 +2084,7 @@ class Builder
      * @param  int  $count
      * @param  callable  $callback
      * @param  string  $column
-     * @param  string  $alias
+     * @param  string|null  $alias
      * @return bool
      */
     public function chunkById($count, callable $callback, $column = 'id', $alias = null)
